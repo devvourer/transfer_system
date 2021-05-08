@@ -7,10 +7,14 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import decorators, response, status, generics, permissions
 from rest_framework.renderers import JSONRenderer
 
+from wallet.models import Wallet
 from .models import User
 from .serializers import UserCreateSerializer, UserEditSerializer
 from django.utils.encoding import force_bytes, force_text
 from .token import account_activation_token
+from wallet.serializer import WalletCreateSerializer
+from django.shortcuts import redirect
+
 
 @decorators.api_view(['POST'])
 @decorators.renderer_classes([JSONRenderer])
@@ -49,7 +53,8 @@ def activate(request, uidb64, token):
     if user is not None and account_activation_token.check_token(user, token):
         user.is_active = True
         user.save()
-        return response.Response('Account has been activated')
+        wallet = Wallet.objects.create(user=user)
+        return redirect('currency_choice', pk=wallet.id)
     else:
         return response.Response('Invalid')
 
@@ -62,6 +67,12 @@ class UserEditView(generics.RetrieveUpdateAPIView):
     def get(self, request, *args, **kwargs):
         serializer = self.serializer_class(request.user)
         return response.Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UpdateWalletView(generics.RetrieveUpdateAPIView):
+    serializer_class = WalletCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Wallet.objects.all()
 
 
 
