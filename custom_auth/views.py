@@ -3,12 +3,14 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import render
 from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
-from rest_framework import decorators, response, status
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from rest_framework import decorators, response, status, generics, permissions
 from rest_framework.renderers import JSONRenderer
-from .serializers import UserCreateSerializer
-from django.utils.encoding import force_bytes, force_text
 
+from .models import User
+from .serializers import UserCreateSerializer, UserEditSerializer
+from django.utils.encoding import force_bytes, force_text
+from .token import account_activation_token
 
 @decorators.api_view(['POST'])
 @decorators.renderer_classes([JSONRenderer])
@@ -32,3 +34,34 @@ def register(request):
     msg = EmailMultiAlternatives(mail_subject, 'follow this link', settings.EMAIL_HOST_USER, [to_email])
     msg.attach_alternative(message, 'text/html')
     msg.send()
+    return response.Response('Email was send for confirmation', status.HTTP_201_CREATED)
+
+
+@decorators.api_view(['POST', 'GET'])
+@decorators.renderer_classes([JSONRenderer])
+def activate(request, uidb64, token):
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+        return response.Response('Account has been activated')
+    else:
+        return response.Response('Invalid')
+
+
+class UserEditView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserEditSerializer
+    queryset = User.objects.filter(is_active=True)
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class(request.user)
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
+
+
+

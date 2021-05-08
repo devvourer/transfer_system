@@ -25,7 +25,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return attrs
 
 
-    class UserEditSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = User
-            fields = ('phone', 'first_name', 'last_name')
+class UserEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('phone', 'first_name', 'last_name')
