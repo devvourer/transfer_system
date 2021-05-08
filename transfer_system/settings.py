@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     'rest_framework',
     # my apps
     'custom_auth',
-    'wallet'
+    'wallet',
+    'actions'
 ]
 
 MIDDLEWARE = [
