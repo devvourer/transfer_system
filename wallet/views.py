@@ -3,13 +3,14 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from rest_framework import generics, response, status
 from rest_framework.renderers import JSONRenderer
-from .serializer import TransferSerializer
+from .serializer import TransferSerializer, ActionsListSerializer
 from custom_auth.models import User
 from .models import Wallet
 from rest_framework import decorators
 from .currency import get_currency
 from currency_converter import CurrencyConverter
 from actions.utils import create_action
+from actions.models import Actions
 
 c = CurrencyConverter(decimal=True)
 
@@ -38,14 +39,18 @@ def transfer(request):
                 receiver.balance += decimal.Decimal(float(cd['how_much']))
                 receiver.save()
                 sender.save()
-                return response.Response('IF WAS WORKED')
+                return response.Response('IF WAS WORKED', status=status.HTTP_202_ACCEPTED)
             else:
                 summ = c.convert(float(cd['how_much']), sender.currency, receiver.currency)
                 receiver.balance += summ
                 receiver.save()
                 sender.save()
-                return response.Response('ELSE WORKED')
+                return response.Response('ELSE WORKED', status=status.HTTP_202_ACCEPTED)
         except ObjectDoesNotExist:
-            return response.Response('user was not found')
+            return response.Response('user was not found', status=status.HTTP_404_NOT_FOUND)
     return response.Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class ActionListView(generics.ListAPIView):
+    queryset = Actions.objects.all()
+    serializer_class = ActionsListSerializer

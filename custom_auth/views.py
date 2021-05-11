@@ -6,7 +6,6 @@ from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import decorators, response, status, generics, permissions
 from rest_framework.renderers import JSONRenderer
-
 from wallet.models import Wallet
 from .models import User
 from .serializers import UserCreateSerializer, UserEditSerializer

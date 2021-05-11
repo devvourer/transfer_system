@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Wallet
-
+from actions.models import Actions
 
 class WalletCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,3 +15,9 @@ class TransferSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = ('to_email', 'how_much')
+
+
+class ActionsListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Actions
+        fields = ('verb','created')
