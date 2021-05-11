@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     # my apps
     'custom_auth',
     'wallet',
+    'actions'
 ]
 
 MIDDLEWARE = [
